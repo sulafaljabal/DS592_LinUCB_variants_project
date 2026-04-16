@@ -31,9 +31,14 @@ from config import *
 
 def run_drift_experiment(drift_fn, label, actions):
     """Run all algorithms on a single drift function."""
+    B_T = drift_fn.total_variation(T)
+    gamma_opt = compute_optimal_gamma(B_T, D, T)
+    tau_opt = compute_optimal_tau(B_T, D, T)
+
     print(f"\n{'─' * 50}")
     print(f"Drift: {label}")
-    print(f"Total variation B_T = {drift_fn.total_variation(T):.4f}")
+    print(f"Total variation B_T = {B_T:.4f}")
+    print(f"Optimal γ = {gamma_opt:.6f}, Optimal τ = {tau_opt}")
     print(f"{'─' * 50}")
 
     env = NonStationaryLinearBandit(
@@ -43,8 +48,8 @@ def run_drift_experiment(drift_fn, label, actions):
 
     algos = {
         'LinUCB': LinUCB(d=D, lambda_reg=LAMBDA_REG, delta=DELTA),
-        'D-LinUCB': DLinUCB(d=D, gamma=GAMMA, lambda_reg=LAMBDA_REG, delta=DELTA),
-        'SW-LinUCB': SWLinUCB(d=D, tau=TAU, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'D-LinUCB': DLinUCB(d=D, gamma=gamma_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'SW-LinUCB': SWLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
     }
 
     results = {}

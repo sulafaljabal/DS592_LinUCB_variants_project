@@ -28,8 +28,15 @@ def main():
 
     # ─── Setup ───
     drift = paper_abrupt_drift(d=D)
+    B_T = drift.total_variation(T)
     print(f"\nDrift: {drift}")
-    print(f"Total variation B_T = {drift.total_variation(T):.2f}")
+    print(f"Total variation B_T = {B_T:.2f}")
+
+    # Compute theoretically optimal γ and τ (Corollary 1 of Russac et al.)
+    gamma_opt = compute_optimal_gamma(B_T, D, T)
+    tau_opt = compute_optimal_tau(B_T, D, T)
+    print(f"Optimal γ = 1 - (B_T/(d*T))^(2/3) = {gamma_opt:.6f}")
+    print(f"Optimal τ = (d*T/B_T)^(2/3) = {tau_opt}")
 
     # Fixed action set: unit vectors on the circle (like the paper)
     rng_actions = np.random.RandomState(42)
@@ -44,8 +51,8 @@ def main():
     # ─── Algorithms ───
     algos = {
         'LinUCB': LinUCB(d=D, lambda_reg=LAMBDA_REG, delta=DELTA),
-        'D-LinUCB': DLinUCB(d=D, gamma=GAMMA, lambda_reg=LAMBDA_REG, delta=DELTA),
-        'SW-LinUCB': SWLinUCB(d=D, tau=TAU, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'D-LinUCB': DLinUCB(d=D, gamma=gamma_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'SW-LinUCB': SWLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
     }
 
     # ─── Run experiments ───
