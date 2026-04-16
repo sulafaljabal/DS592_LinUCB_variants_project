@@ -13,14 +13,16 @@ Must store the last τ (action, reward) pairs.
 """
 
 import numpy as np
+from math import log
 from collections import deque
+from numpy.linalg import pinv
 from algorithms.base import BanditAlgorithm
 
 
 class SWLinUCB(BanditAlgorithm):
     """Sliding Window LinUCB with window size τ."""
 
-    def __init__(self, d, tau=200, lambda_reg=1.0, delta=0.01,
+    def __init__(self, d, tau=200, lambda_reg=1.0, delta=0.01, alpha=1.0,
                  sigma_noise=1.0, S=1.0):
         """
         Parameters
@@ -33,6 +35,8 @@ class SWLinUCB(BanditAlgorithm):
             Regularization λ.
         delta : float
             Confidence δ.
+        alpha : float
+            Exploration multiplier.
         sigma_noise : float
             Sub-Gaussian noise parameter σ.
         S : float
@@ -40,6 +44,7 @@ class SWLinUCB(BanditAlgorithm):
         """
         super().__init__(d, lambda_reg, delta, name=f"SW-LinUCB(τ={tau})")
         self.tau = tau
+        self.alpha = alpha
         self.sigma_noise = sigma_noise
         self.S = S
         self.reset()
@@ -49,8 +54,12 @@ class SWLinUCB(BanditAlgorithm):
         self.history = deque(maxlen=self.tau)  # stores (action, reward) pairs
         self.V = self.lambda_reg * np.eye(self.d)
         self.b = np.zeros(self.d)
-        self.V_inv = np.eye(self.d) / self.lambda_reg
+        self.V_inv = (1.0 / self.lambda_reg) * np.eye(self.d)
         self.theta_hat = np.zeros(self.d)
+
+        # Precompute constants
+        self.c_delta = 2 * log(1.0 / self.delta)
+        self.const1 = np.sqrt(self.lambda_reg) * self.S
 
     def _rebuild(self):
         """Rebuild V and b from the current window. Called every update."""
@@ -59,18 +68,22 @@ class SWLinUCB(BanditAlgorithm):
         for (a, r) in self.history:
             self.V += np.outer(a, a)
             self.b += r * a
-        self.V_inv = np.linalg.inv(self.V)
+        # Use pinv matching the author's approach (SM not applicable
+        # because the window removal is not a rank-1 update)
+        self.V_inv = pinv(self.V)
         self.theta_hat = self.V_inv @ self.b
 
     def _compute_beta(self):
-        """Confidence width adapted for the sliding window."""
+        """
+        Confidence width for the sliding window.
+
+        Uses effective time min(t, τ) in the log-determinant bound,
+        matching the structure of the author's LinUCB beta.
+        """
         effective_t = min(self.t, self.tau)
-        log_det_ratio = np.log(
-            max(np.linalg.det(self.V) / (self.lambda_reg ** self.d), 1.0)
+        beta = self.const1 + self.sigma_noise * np.sqrt(
+            self.c_delta + self.d * log(1.0 + effective_t / (self.lambda_reg * self.d))
         )
-        beta = (self.sigma_noise
-                * np.sqrt(2 * np.log(1.0 / self.delta) + log_det_ratio)
-                + np.sqrt(self.lambda_reg) * self.S)
         return beta
 
     def select_action(self, actions):
@@ -81,13 +94,16 @@ class SWLinUCB(BanditAlgorithm):
 
         for i in range(n_actions):
             a = actions[i]
+            invcov_a = self.V_inv @ a
             mean = a @ self.theta_hat
-            bonus = beta * np.sqrt(a @ self.V_inv @ a)
+            bonus = self.alpha * beta * np.sqrt(a @ invcov_a)
             ucb_values[i] = mean + bonus
 
-        max_val = np.max(ucb_values)
-        candidates = np.where(np.isclose(ucb_values, max_val))[0]
-        return np.random.choice(candidates)
+        # Break ties randomly (matching author's lexsort approach)
+        mixer = np.random.random(ucb_values.size)
+        ucb_indices = list(np.lexsort((mixer, ucb_values)))
+        chosen_arm = ucb_indices[-1]  # largest UCB
+        return chosen_arm
 
     def update(self, action, reward):
         """
