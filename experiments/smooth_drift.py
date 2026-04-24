@@ -19,7 +19,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from algorithms import LinUCB, DLinUCB, SWLinUCB
+from algorithms import LinUCB, DLinUCB, SWLinUCB, DynamicLinUCB
 from drift_functions import (
     slow_linear_drift, fast_linear_drift,
     slow_sinusoidal, fast_sinusoidal,
@@ -50,6 +50,7 @@ def run_drift_experiment(drift_fn, label, actions):
         'LinUCB': LinUCB(d=D, lambda_reg=LAMBDA_REG, delta=DELTA),
         'D-LinUCB': DLinUCB(d=D, gamma=gamma_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
         'SW-LinUCB': SWLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'dLinUCB': DynamicLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
     }
 
     results = {}
@@ -107,7 +108,7 @@ def main():
     print("\n" + "=" * 60)
     print("SUMMARY: Final mean regret across drift types")
     print("=" * 60)
-    header = f"{'Drift Type':<20} {'LinUCB':>10} {'D-LinUCB':>10} {'SW-LinUCB':>12} {'B_T':>10}"
+    header = f"{'Drift Type':<20} {'LinUCB':>10} {'D-LinUCB':>10} {'SW-LinUCB':>12} {'dLinUCB':>10} {'B_T':>10}"
     print(header)
     print("-" * len(header))
 
@@ -115,7 +116,7 @@ def main():
         results = all_results[label]
         bv = drift_fn.total_variation(T)
         row = f"{label:<20}"
-        for algo_name in ['LinUCB', 'D-LinUCB', 'SW-LinUCB']:
+        for algo_name in ['LinUCB', 'D-LinUCB', 'SW-LinUCB', 'dLinUCB']:
             final = results[algo_name]['mean_regret'][-1]
             row += f" {final:>10.1f}"
         row += f" {bv:>10.4f}"

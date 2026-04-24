@@ -6,6 +6,79 @@ Reproducing and extending the results from Russac et al. (NeurIPS 2019):
 
 ---
 
+### Overview
+
+In many real-world sequential decision-making problems — recommendation systems, dynamic pricing, clinical trials — user preferences and environmental conditions drift over time. Standard bandit algorithms like LinUCB assume a stationary reward model and fail when the underlying parameter θ* changes. D-LinUCB (Russac et al., 2019) addresses this by applying exponential discounting to the least-squares estimator, weighting recent observations more heavily than old ones. SW-LinUCB (Cheung et al., 2019) takes an alternative approach, using only the most recent τ observations via a sliding window.
+
+This project has two goals:
+
+1. **Reproduce** the original D-LinUCB results on abruptly-changing environments (sharp breakpoints in θ*), validating our implementation against the author's reference code.
+2. **Extend** the experiments to smooth, structured drift functions — linear drift, sinusoidal drift, and piecewise linear drift — to test whether D-LinUCB's advantages hold when non-stationarity is gradual rather than abrupt. We also analyze how sensitive the algorithms are to their key hyperparameters (discount factor γ for D-LinUCB, window size τ for SW-LinUCB) and whether the paper's theoretical tuning formulas from Corollary 1 hold empirically across drift types.
+
+---
+
+### Prerequisites
+
+- Python 3.9 or higher
+- pip
+
+---
+
+### Getting Started
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/YOUR_USERNAME/ds592-weighted-linear-bandits.git
+cd ds592-weighted-linear-bandits
+```
+
+**2. Create and activate a virtual environment:**
+
+macOS / Linux:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Windows:
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Verify the installation:**
+```bash
+python -c "from algorithms import LinUCB, DLinUCB, SWLinUCB; print('All imports OK')"
+```
+
+**5. Run the experiments:**
+
+Run everything at once:
+```bash
+python run_all.py
+```
+
+Or run individual experiments:
+```bash
+python -m experiments.reproduce_paper    # Reproduce Figure 1 from the paper
+python -m experiments.smooth_drift       # Novel smooth drift experiments
+python -m experiments.sensitivity        # Hyperparameter sensitivity sweeps
+```
+
+Plots are saved to the `plots/` directory.
+
+**6. Deactivate the virtual environment when done:**
+```bash
+deactivate
+```
+
+---
+
 ### Project Structure
 
 ```
@@ -36,6 +109,7 @@ project/
 ├── plots/                   # Output directory for generated figures
 ├── config.py                # Shared parameters + theoretical γ/τ helpers
 ├── run_all.py               # Master script to run all experiments
+├── requirements.txt         # Python dependencies
 ├── .gitignore
 └── README.md
 ```
@@ -47,24 +121,6 @@ project/
 - **LinUCB** — Standard optimistic linear bandit (Ch. 19 of Lattimore & Szepesvári). Uses all historical data equally. Serves as a baseline that cannot adapt to non-stationarity.
 - **D-LinUCB** — Discounted LinUCB with exponential weights (Russac et al. 2019). Uses a discount factor γ to exponentially downweight old observations, allowing it to track a drifting θ*.
 - **SW-LinUCB** — Sliding Window LinUCB (Cheung et al. 2019). Only uses the last τ observations, providing a hard cutoff instead of smooth discounting.
-
----
-
-### How to Run
-
-Run all experiments from the project root:
-```bash
-python run_all.py
-```
-
-Or run individual experiments:
-```bash
-python -m experiments.reproduce_paper
-python -m experiments.smooth_drift
-python -m experiments.sensitivity
-```
-
-Plots are saved to `plots/`.
 
 ---
 

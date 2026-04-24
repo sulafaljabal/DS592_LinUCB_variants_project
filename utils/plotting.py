@@ -54,7 +54,7 @@ def plot_cumulative_regret(results_dict, T, title="Cumulative Regret",
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
         print(f"Saved: {save_path}")
-    plt.show()
+    plt.show(block=False)
 
 
 def plot_theta_trajectory(results_dict, drift_fn, T, d=2,

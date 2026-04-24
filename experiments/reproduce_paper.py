@@ -13,7 +13,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from algorithms import LinUCB, DLinUCB, SWLinUCB
+from algorithms import LinUCB, DLinUCB, SWLinUCB, DynamicLinUCB
 from drift_functions import paper_abrupt_drift
 from environments import NonStationaryLinearBandit, run_experiment
 from utils import plot_cumulative_regret, plot_theta_trajectory
@@ -53,6 +53,7 @@ def main():
         'LinUCB': LinUCB(d=D, lambda_reg=LAMBDA_REG, delta=DELTA),
         'D-LinUCB': DLinUCB(d=D, gamma=gamma_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
         'SW-LinUCB': SWLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
+        'dLinUCB': DynamicLinUCB(d=D, tau=tau_opt, lambda_reg=LAMBDA_REG, delta=DELTA),
     }
 
     # ─── Run experiments ───
