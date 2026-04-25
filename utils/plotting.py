@@ -10,7 +10,7 @@ import os
 
 
 def plot_cumulative_regret(results_dict, T, title="Cumulative Regret",
-                           save_path=None, show_std=True):
+                        save_path=None, show_std=True):
     """
     Plot cumulative regret curves for multiple algorithms.
 
@@ -31,7 +31,7 @@ def plot_cumulative_regret(results_dict, T, title="Cumulative Regret",
     timesteps = np.arange(1, T + 1)
 
     colors = ['steelblue', 'darkorange', 'forestgreen', 'firebrick',
-              'mediumpurple', 'brown']
+            'mediumpurple', 'brown']
 
     for i, (name, res) in enumerate(results_dict.items()):
         color = colors[i % len(colors)]
@@ -58,8 +58,8 @@ def plot_cumulative_regret(results_dict, T, title="Cumulative Regret",
 
 
 def plot_theta_trajectory(results_dict, drift_fn, T, d=2,
-                          title="Parameter Estimates vs True θ*",
-                          save_path=None):
+                        title="Parameter Estimates vs True θ*",
+                        save_path=None):
     """
     Plot how θ̂_t tracks the true θ*_t over time.
 
@@ -80,7 +80,7 @@ def plot_theta_trajectory(results_dict, drift_fn, T, d=2,
     true_theta = np.array([drift_fn(t) for t in timesteps])
 
     fig, axes = plt.subplots(min(d, 2), 1, figsize=(10, 4 * min(d, 2)),
-                             sharex=True)
+                            sharex=True)
     if min(d, 2) == 1:
         axes = [axes]
 
@@ -110,12 +110,12 @@ def plot_theta_trajectory(results_dict, drift_fn, T, d=2,
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
         print(f"Saved: {save_path}")
-    plt.show()
+    plt.show(block=False)
 
 
 def plot_regret_vs_parameter(param_values, regret_values, param_name,
-                              algo_names, title="Regret vs Parameter",
-                              save_path=None):
+                            algo_names, title="Regret vs Parameter",
+                            save_path=None):
     """
     Plot final regret as a function of a swept parameter.
     Useful for hyperparameter sensitivity analysis.
@@ -137,7 +137,7 @@ def plot_regret_vs_parameter(param_values, regret_values, param_name,
         stds = [r[1] for r in regret_values[name]]
         color = colors[i % len(colors)]
         ax.errorbar(param_values, means, yerr=stds, label=name,
-                     color=color, marker='o', capsize=3, linewidth=1.5)
+                    color=color, marker='o', capsize=3, linewidth=1.5)
 
     ax.set_xlabel(param_name, fontsize=12)
     ax.set_ylabel('Final Cumulative Regret', fontsize=12)
@@ -150,4 +150,4 @@ def plot_regret_vs_parameter(param_values, regret_values, param_name,
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
         print(f"Saved: {save_path}")
-    plt.show()
+    plt.show(block=False)
